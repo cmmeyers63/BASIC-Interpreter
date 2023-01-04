@@ -1,5 +1,6 @@
 import sys
 from enum import Enum 
+from collections import deque
 import re
 
 class ParseError(Exception):
@@ -23,6 +24,8 @@ class TokenType(Enum):
 	# non-terminals
 	START = 10
 	A_EXPR = 11
+	I_EXPR = 13
+	B_EXPR = 14
 
 
 class Token():
@@ -33,12 +36,13 @@ class Token():
 
 		self.children = []
 		self.parent = None
+		self.id = 0
 
 	def __repr__(self):
 		return f"{self.type} {self.value if self.value is not None else '-'} {self.name if self.name is not None else '-'}"
 
-	def add_child(self, token):
-		self.children.append(token)
+	def add_children(self, tokens: list):
+		self.children.extend(tokens)
 
 def build_token(str_token):
 	# simple terminals
@@ -74,8 +78,7 @@ def build_token(str_token):
 	raise ValueError(f"Unexpected token : {str_token}")
 
 
-def lex():
-	user_in = input("enter expression: ").rstrip().split(' ')
+def lex(user_in : list):
 	user_in = [x for x in user_in if x != "" or x != " "]
 
 	print(f"start build token")
@@ -90,12 +93,14 @@ def lex():
 
 """
 Grammer: 
+	https://www.usna.edu/Users/cs/wcbrown/courses/F20SI413/lec/l10/lec.html
+	https://www.usna.edu/Users/cs/wcbrown/courses/F20SI413/firstFollowPredict/ffp.html
 
 	START -> A_EXPR 
 	
 	A_EXPR -> I_EXPR (+ | -) A_EXPR
 		| I_EXPR 
-		| I_EXPR (+ | -) B_EXPR
+		| B_EXPR (* | /) A_EXPR
 		| B_EXPR
 
 	B_EXPR -> I_EXPR (* | /) B_EXPR
@@ -113,9 +118,49 @@ class Parser():
 		self.root_node = None
 		self.tokens = tokens
 
-	def _pop_tokens(self, token_list : list):
+	def _pop_tokens(self, token_list : list) -> None:
 		for tok in token_list:
 			self.tokens.remove(tok)
+
+
+	def _peek(self, token_type_list : list[TokenType]) -> bool:
+		if len(self.tokens) < len(token_type_list):
+			return False 
+
+		for i, token_t in enumerate(token_type_list):
+			if self.tokens[i].type != token_t:
+				return False
+
+		return True
+
+	# https://www.graphviz.org/pdf/dotguide.pdf
+	def Create_GraphViz(self):
+		# visualize with : dot -Tpdf parse.dot > parse.pdf
+		with open('parse.dot', 'w') as f:
+			f.write("digraph G { \n")
+			
+			nodeId = 0
+			# traverse tree and list all nodes
+			Q = deque()
+			self.root_node.id = nodeId
+			Q.append(self.root_node)
+			while len(Q) > 0:
+				current_node : Token = Q.pop()
+				nodeId = nodeId + 1
+				current_node.id = nodeId
+				f.write(f'{nodeId} [label="{current_node}"];\n')
+				Q.extend(current_node.children)
+			
+			# traverse tree and list all connections
+			Q = deque()
+			Q.append(self.root_node)
+			while len(Q) > 0:
+				current_node : Token = Q.pop()
+				for child in current_node.children:
+					f.write(f"{current_node.id} -> {child.id};\n")
+				Q.extend(current_node.children)
+
+			f.write("} \n")
 				
 	def Parse(self):
 		self.START()
@@ -123,43 +168,57 @@ class Parser():
 	# S -> A_EXPR ;
 	def START(self) -> Token:
 		current_node = Token(TokenType.START)
-		self.A_EXPR(current_node)
-
 		self.root_node = current_node
+		self.A_EXPR(current_node)
 		
+	# generally:
+	# consume terminals, call function for Non-terminal
 
 	def A_EXPR(self, parent_node : Token):
 		# non terminals make their own nodes
 		current_node = Token(TokenType.A_EXPR)
+		parent_node.add_children([current_node])
+		
+		# 5 + ...
+		if self._peek([TokenType.VALUE, TokenType.PLUS]):
+			self.I_EXPR(current_node)
+			current_node.add_children([tokens.pop(0)]) # the plus
+			self.A_EXPR(current_node)
+		# 5
+		elif self._peek([TokenType.VALUE]):
+			self.I_EXPR(current_node)
 
-		parent_node.add_child(current_node)
+	def B_EXPR(self, parent_node : Token):
+		pass
 
-		# terminals attach themselves since they were already constructed by the lexer
-		match self.tokens:
-			case [a]: 
-				current_node.add_child(a)
-				tokens.remove(a)
-				return
-			case [a, b, c]:
-				current_node.add_child(a)
-				current_node.add_child(b)
-				current_node.add_child(c)
-				self._pop_tokens([a,b,c])
-				return
-			case [a, b, *rest]:
-				current_node.add_child(a)
-				current_node.add_child(b)
-				self._pop_tokens([a,b])
-				self.A_EXPR(current_node)
-			case _:
-				raise ParseError("A_EXPR fell through")
+	def I_EXPR(self, parent_node : Token):
+		current_node = Token(TokenType.I_EXPR)
+		parent_node.add_children([current_node])
+
+		# 5 ** 2
+		if self._peek([TokenType.VALUE, TokenType.POW, TokenType.VALUE]):
+			current_node.add_children([tokens.pop(0), tokens.pop(0), tokens.pop(0)])
+		# 5
+		elif self._peek([TokenType.VALUE]):
+			current_node.add_children([tokens.pop(0)])
+
+
 
 
 if __name__ == "__main__":
-	tokens : list = lex()
+	if len(sys.argv) < 2:
+		print("usage python calc.py [expression]")
+		exit(-1)
+
+	print(sys.argv)
+
+	tokens : list = lex(sys.argv[1:])
 	print(tokens)
 	
 	parser = Parser(tokens)
 	print("begin parse")
 	parser.Parse()
 	print("end parse")
+	print("begin graphviz")
+	parser.Create_GraphViz()
+	print("end graphviz")
