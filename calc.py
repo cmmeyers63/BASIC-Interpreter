@@ -180,13 +180,16 @@ class Parser():
 		parent_node.add_children([current_node])
 		
 		# 5 + ...
-		if self._peek([TokenType.VALUE, TokenType.PLUS]):
+		# 5 - ...
+		if self._peek([TokenType.VALUE, TokenType.PLUS]) or self._peek([TokenType.VALUE, TokenType.MINUS]):
 			self.I_EXPR(current_node)
 			current_node.add_children([tokens.pop(0)]) # the plus
 			self.A_EXPR(current_node)
 		# 5
 		elif self._peek([TokenType.VALUE]):
 			self.I_EXPR(current_node)
+		else:
+			raise ParseError(f"Unexpected tokens in A_EXPR {tokens}")
 
 	def B_EXPR(self, parent_node : Token):
 		pass
@@ -210,9 +213,9 @@ if __name__ == "__main__":
 		print("usage python calc.py [expression]")
 		exit(-1)
 
-	print(sys.argv)
+	print("aruments",sys.argv)
 
-	tokens : list = lex(sys.argv[1:])
+	tokens : list = lex(sys.argv[1].split(' '))
 	print(tokens)
 	
 	parser = Parser(tokens)
