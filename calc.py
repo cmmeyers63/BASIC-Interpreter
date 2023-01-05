@@ -29,17 +29,17 @@ class TokenType(Enum):
 
 
 class Token():
-	def __init__(self, tokenT : TokenType, value = None, name = None) -> None:
+	def __init__(self, tokenT : TokenType, value = None) -> None:
 		self.type = tokenT
 		self.value = value
-		self.name = name
 
 		self.children = []
 		self.parent = None
 		self.id = 0
 
 	def __repr__(self):
-		return f"{self.type} {self.value if self.value is not None else '-'} {self.name if self.name is not None else '-'}"
+		type_without_prefix = str(self.type).split('.')[-1]
+		return f"{type_without_prefix} {self.value if self.value is not None else '-'}"
 
 	def add_children(self, tokens: list):
 		self.children.extend(tokens)
@@ -73,7 +73,7 @@ def build_token(str_token):
 	
 	match = re.compile("^[a-zA-Z]+$").match(str_token)
 	if match is not None:
-		return Token(TokenType.VARIABLE, name=str_token)
+		return Token(TokenType.VARIABLE, value=str_token)
 	
 	raise ValueError(f"Unexpected token : {str_token}")
 
@@ -96,7 +96,7 @@ Grammer:
 	https://www.usna.edu/Users/cs/wcbrown/courses/F20SI413/lec/l10/lec.html
 	https://www.usna.edu/Users/cs/wcbrown/courses/F20SI413/firstFollowPredict/ffp.html
 
-	START -> A_EXPR 
+	START -> A_EXPR $
 	
 	A_EXPR -> I_EXPR (+ | -) A_EXPR
 		| I_EXPR 
@@ -204,7 +204,8 @@ class Parser():
 		# 5
 		elif self._peek([TokenType.VALUE]):
 			current_node.add_children([tokens.pop(0)])
-
+		else:
+			raise ParseError(f"Unexpected tokens in I_EXPR {tokens}")
 
 
 
@@ -223,5 +224,5 @@ if __name__ == "__main__":
 	parser.Parse()
 	print("end parse")
 	print("begin graphviz")
-	parser.Create_GraphViz()
+	parser.Create_GraphViz() # creates file
 	print("end graphviz")
