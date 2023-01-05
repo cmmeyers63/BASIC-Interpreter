@@ -98,9 +98,7 @@ Grammer:
 
 	START -> A_EXPR $
 	
-	A_EXPR -> I_EXPR (+ | -) A_EXPR
-		| I_EXPR 
-		| B_EXPR (* | /) A_EXPR
+	A_EXPR -> B_EXPR (+ | -) A_EXPR
 		| B_EXPR
 
 	B_EXPR -> I_EXPR (* | /) B_EXPR
@@ -108,7 +106,7 @@ Grammer:
 
 	I_EXPR -> value ** value
 		| value
-		| -(I_EXPR) | (A_EXPR)
+		| -(A_EXPR) | (A_EXPR)
 
 	division and subtraction will need to be unrolled during SDT to produce the correct operator associativity
 """
@@ -151,7 +149,7 @@ class Parser():
 				f.write(f'{nodeId} [label="{current_node}"];\n')
 				Q.extend(current_node.children)
 			
-			# traverse tree and list all connections
+			# traverse tree and list all edges
 			Q = deque()
 			Q.append(self.root_node)
 			while len(Q) > 0:
@@ -178,21 +176,26 @@ class Parser():
 		# non terminals make their own nodes
 		current_node = Token(TokenType.A_EXPR)
 		parent_node.add_children([current_node])
-		
-		# 5 + ...
-		# 5 - ...
-		if self._peek([TokenType.VALUE, TokenType.PLUS]) or self._peek([TokenType.VALUE, TokenType.MINUS]):
-			self.I_EXPR(current_node)
-			current_node.add_children([tokens.pop(0)]) # the plus
+
+		self.B_EXPR(current_node)
+
+		# + ...
+		# - ... 
+		if self._peek([TokenType.PLUS]) or self._peek([TokenType.MINUS]):
+			current_node.add_children([tokens.pop(0)]) # capture terminal
 			self.A_EXPR(current_node)
-		# 5
-		elif self._peek([TokenType.VALUE]):
-			self.I_EXPR(current_node)
-		else:
-			raise ParseError(f"Unexpected tokens in A_EXPR {tokens}")
+
 
 	def B_EXPR(self, parent_node : Token):
-		pass
+		current_node = Token(TokenType.B_EXPR)
+		parent_node.add_children([current_node])
+		
+		self.I_EXPR(current_node)
+
+		if self._peek([TokenType.TIMES] or self._peek([TokenType.DIVIDE])):
+			current_node.add_children([tokens.pop(0)])
+			self.B_EXPR(current_node)
+
 
 	def I_EXPR(self, parent_node : Token):
 		current_node = Token(TokenType.I_EXPR)
@@ -201,6 +204,19 @@ class Parser():
 		# 5 ** 2
 		if self._peek([TokenType.VALUE, TokenType.POW, TokenType.VALUE]):
 			current_node.add_children([tokens.pop(0), tokens.pop(0), tokens.pop(0)])
+		# -(5)
+		elif self._peek([TokenType.MINUS, TokenType.L_PAREN]):
+			# -(
+			current_node.add_children([tokens.pop(0), tokens.pop(0)])
+			self.A_EXPR(current_node) 
+			# )
+			current_node.add_children([tokens.pop(0)])
+		elif self._peek([TokenType.L_PAREN]):
+			# (
+			current_node.add_children([tokens.pop(0)])
+			self.A_EXPR(current_node)
+			# ) 
+			current_node.add_children([tokens.pop(0)])
 		# 5
 		elif self._peek([TokenType.VALUE]):
 			current_node.add_children([tokens.pop(0)])
