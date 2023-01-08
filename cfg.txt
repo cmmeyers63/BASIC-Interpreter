@@ -1,0 +1,19 @@
+
+Grammer: 
+
+https://www.usna.edu/Users/cs/wcbrown/courses/F20SI413/lec/l10/lec.html
+https://www.usna.edu/Users/cs/wcbrown/courses/F20SI413/firstFollowPredict/ffp.html
+
+START -> A_EXPR $
+
+A_EXPR -> B_EXPR (+ | -) A_EXPR
+        | B_EXPR
+
+B_EXPR -> I_EXPR (* | /) B_EXPR
+        | I_EXPR
+
+I_EXPR -> value ** value
+        | value
+        | -(A_EXPR) | (A_EXPR)
+
+division and subtraction will need to be unrolled during SDT to produce the correct operator associativity
