@@ -1,45 +1,38 @@
-from enum import Enum 
+from enum import StrEnum, unique, auto
 
-class TokenType(Enum):
-	# terminals
-	L_PAREN = 0
-	R_PAREN = 1
-	EQUALS = 2
-	PLUS = 3
-	MINUS = 4
-	TIMES = 5
-	DIVIDE = 6
-	VALUE = 7
-	IDENTIFIER = 8
-	END_OF_STMT = 9
-	POW = 12
-
-	NEWLINE = 15
-	EOF = 16
-
-	# non-terminals
-	START = 10
-	A_EXPR = 11
-	I_EXPR = 13
-	B_EXPR = 14
-
-
-def _init_from_str(token_type : str):
-		types = {
-			'(' : TokenType.L_PAREN,
-			')' : TokenType.R_PAREN,
-			'=' : TokenType.EQUALS,
-			'+' : TokenType.PLUS,
-			'-' : TokenType.MINUS,
-			'*' : TokenType.TIMES,
-			'/' : TokenType.DIVIDE,
-			
-		}
+@unique
+class TokenType(StrEnum):
+	# keywords
+	GOTO 		= 'GOTO'
+	END 		= 'END'
+	IF			= 'IF'
+	THEN		= 'THEN'
+	PRINT		= 'PRINT'
+	LET			= 'LET'
+	REM			= 'REM'
+	TO			= 'TO'
+	NEXT		= 'NEXT'
+	EOL			= 'EOL'
+	EOF			= 'EOF'
+	DIM			= 'DIM'
+	
+	# re keywords
+	NUMBER 		= 'NUMBER'
+	ASSIGN		= 'ASSIGN'
+	IDENT		= 'IDENT'
+	OP			= 'OP'
+	COMPARE 	= 'COMPARE'
+	L_PAREN		= 'L_PAREN'
+	R_PAREN		= 'R_PAREN'
+	NEWLINE		= 'NEWLINE'
+	COMMA		= 'COMMA'
+	QUOTE		= 'QUOTE'
 
 
-class Token():
+
+class Node():
 	# terminal symbol constructor
-	def __init__(self, type : TokenType, value: str, line: int, col: int) -> None:
+	def __init__(self, type : TokenType, value: str = "", line: int = -1, col: int = -1) -> None:
 		self.type = type
 		self.value = value
 		self.line = line
