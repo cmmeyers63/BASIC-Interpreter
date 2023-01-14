@@ -18,6 +18,7 @@ if __name__ == "__main__":
 	# initalize the lexer with the passed filename
 	lexer = lex.Lexer(filename)
 
+	
 
 
 	exit()

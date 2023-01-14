@@ -14,6 +14,9 @@ class TokenType(Enum):
 	END_OF_STMT = 9
 	POW = 12
 
+	NEWLINE = 15
+	EOF = 16
+
 	# non-terminals
 	START = 10
 	A_EXPR = 11
@@ -21,11 +24,27 @@ class TokenType(Enum):
 	B_EXPR = 14
 
 
-class Token():
-	def __init__(self, tokenT : TokenType, value = None) -> None:
-		self.type = tokenT
-		self.value = value
+def _init_from_str(token_type : str):
+		types = {
+			'(' : TokenType.L_PAREN,
+			')' : TokenType.R_PAREN,
+			'=' : TokenType.EQUALS,
+			'+' : TokenType.PLUS,
+			'-' : TokenType.MINUS,
+			'*' : TokenType.TIMES,
+			'/' : TokenType.DIVIDE,
+			
+		}
 
+
+class Token():
+	# terminal symbol constructor
+	def __init__(self, type : TokenType, value: str, line: int, col: int) -> None:
+		self.type = type
+		self.value = value
+		self.line = line
+		self.col = col
+		
 		self.children = []
 		self.parent = None
 		self.id = 0

@@ -1,70 +1,89 @@
 import re
+from collections import deque
 from ast_types import *
 
+
+
+'''
+	Much of the source code for this Lexer was taken from this excellent example found in the python RE docs
+	Many thanks to: Friedl, Jeffrey. Mastering Regular Expressions. 3rd ed., O'Reilly Media, 2009.
+	https://docs.python.org/3/library/re.html#functions
+
+'''
 class Lexer():
-        def __init__(self, filename : str) -> None:
-                self._filename = filename
-                self._integer_re = re.compile("\d")
-                self._identifer_re = re.compile("^[a-zA-Z]+$")
+	# https://www.calormen.com/jsbasic/reference.html
 
-                self._line_num = 0
-                self._column_num = 0
-                self._current_line = []
+	reserved_keywords = {
+		'GOTO',
+		'END',
+		'IF',
+		'THEN',
+		'PRINT'
+		'LET'
+	}
 
-        def __del__()
+	token_specification = [
+		('NUMBER',   r'\d+(\.\d*)?'),  # Integer or decimal number
+		('ASSIGN',   r':='),           # Assignment operator
+		('END',      r';'),            # Statement terminator
+		('ID',       r'[A-Za-z]+'),    # Identifiers
+		('OP',       r'[+\-*/]'),      # Arithmetic operators
+		('NEWLINE',  r'\n'),           # Line endings
+		('SKIP',     r'[ \t]+'),       # Skip over spaces and tabs
+		('MISMATCH', r'.'),            # Any other character
+	]
 
-        def _build_token(self, str_tok : str) -> Token:
-                match str_tok:
-                        case '(':
-                                return Token(TokenType.L_PAREN)
-                        case ')':
-                                return Token(TokenType.R_PAREN)
-                        case '=':
-                                return Token(TokenType.EQUALS)
-                        case '+':
-                                return Token(TokenType.PLUS)
-                        case '-':
-                                return Token(TokenType.MINUS)
-                        case '*':
-                                return Token(TokenType.TIMES)
-                        case '/':
-                                return Token(TokenType.DIVIDE)
-                        case ';':
-                                return Token(TokenType.END_OF_STMT)
-                        case '**':
-                                return Token(TokenType.POW)
+	def __init__(self, filename : str) -> None:
 
-                # integer test
-                match = self._integer_re.match(str_tok)
-                if match is not None:
-                        return Token(TokenType.VALUE, value=int(str_tok))
-                
-                match = self._identifer_re.match(str_tok)
-                if match is not None:
-                        return Token(TokenType.IDENTIFIER, value=str_tok)
-                
-                raise ValueError(f"Unexpected token : {str_tok}")
+		# related to files
+		self._filename = filename
+		self.file = open(self._filename, 'r')
 
-        def lex(input : list[str]) -> list[Token]:
-                user_in = [x for x in user_in if x != "" or x != " "]
+		# setup regex for matching tokens
+		tok_regex_str = '|'.join('(?P<%s>%s)' % pair for pair in self.token_specification)
+		self.token_regex = re.compile(tok_regex_str)
 
-                print(f"start build token")
-                tokens = []
-                for char in user_in:
-                        print(f"\t in : {char}")
-                        token = build_token(char)
-                        print(f"\t out: {token}")
-                        tokens.append(token)
-                print("end build token")
-                return tokens
+		# queue for tokens
+		# fill it with more by calling _tokenize
+		self._tokens = deque()
+
+		# lexer position within file
+		self.line_no = 1
 
 
-        def peek(self, token_type_list : list[TokenType]) -> bool:
-                for tok in token_type_list:
-                        result : bool = self._peek(tok)
-                        if not result:
-                                return result
-                return True
+	def _tokenize(self):
+		line: str = self.file.readline()
 
-        def peek(self, token_type : TokenType) -> bool:
-                pass
+		if line == []:
+			self._tokens.append(Token(TokenType.EOF,'',self.line_no, 0))
+
+		for match_obj in self.token_regex.finditer(line):
+			kind = match_obj.lastgroup
+			value = match_obj.group()
+			column = match_obj.start()
+
+			if kind == 'NUMBER':
+				value = float(value) if '.' in value else int(value)
+			elif kind == 'ID' and value in self.reserved_keywords:
+				kind = value
+			elif kind == 'NEWLINE':
+				line_start = match_obj.end()
+				self.line_no += 1
+				break
+			elif kind == 'SKIP':
+				continue
+			elif kind == 'MISMATCH':
+				raise RuntimeError(f'{value!r} unexpected on line {self.line_no}')
+			
+			tokenEnum = 
+			token = Token(kind, value, self.line_no, column) # type: ignore	(pretty sure this is caught by the MISMATCH case)
+
+			self._tokens.append(token)
+
+
+	def peek(self, tokenType: TokenType) -> bool:
+		return False
+
+	def pop(self, number_tokens_to_pop: int):
+		for i in range(number_tokens_to_pop):
+			self._tokens.pop()
