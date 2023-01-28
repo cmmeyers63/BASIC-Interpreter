@@ -1,6 +1,7 @@
 import sys
 import os.path
 import lex
+from b_types import *
 
 # https://mirrors.apple2.org.za/Apple%20II%20Documentation%20Project/Software/Languages/Applesoft%20BASIC/Manuals/Applesoft%20II%20BASIC%20Programming%20Reference%20Manual.pdf
 # https://www.calormen.com/jsbasic/reference.html
@@ -20,7 +21,15 @@ if __name__ == "__main__":
 	lexer = lex.Lexer(filename)
 
 	lexer.Tokenize()
-	
+
+	# print(lexer.peek(TokenType.NUMBER))
+	# print(lexer.peek(TokenType.ASSIGN))
+
+	# print(lexer.peek_n([TokenType.NUMBER, TokenType.OP, TokenType.NUMBER]))
+
+	# print(lexer.pop(1))
+	# print(lexer.peek(TokenType.OP))
+
 	exit()
 
 	# parser = parse.Parser(lexer)

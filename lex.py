@@ -1,6 +1,6 @@
 import re
 from collections import deque
-from ast_types import *
+from b_types import *
 
 
 '''
@@ -24,7 +24,8 @@ class Lexer():
 		'NEXT',
 		'EOL',
 		'EOF',
-		'DIM'
+		'DIM',
+		'PRINT'
 	}
 
 	token_specification = [
@@ -54,11 +55,14 @@ class Lexer():
 		self.token_re = re.compile(tok_regex_str)
 
 		# queue for tokens
-		self._tokens = deque()
+		self._tokens: deque[Node] = deque()
 
 		# lexer position within file
 		self.line_no = 1
 
+	@staticmethod
+	def pretty_print_token(token : Node):
+		print(f"\t{token.type:<15} value: {(token.value if token.type is not TokenType.NEWLINE else 'newline'):<10} ln:{token.line:<5} col:{token.col:<6}")
 
 	# Takes in a string representing a line of text and returns an array of tokens 
 	def Tokenize(self):
@@ -76,8 +80,13 @@ class Lexer():
 				self.line_no += 1
 				print("\tCOMMENT SKIPPED")
 				continue
-			
+
 			self._tokenize_line(line)
+			
+		# manually append a EOF
+		node = Node(TokenType.EOF,'',self.line_no,0)
+		Lexer.pretty_print_token(node)
+		self._tokens.append(node)
 
 
 	def _tokenize_line(self, line : str):
@@ -89,14 +98,13 @@ class Lexer():
 			if kind == 'NUMBER':
 				# value = float(value) if '.' in value else int(value)
 				pass
-			elif kind == 'ID' and value in self.reserved_keywords:
+			elif kind == 'IDENT' and value in self.reserved_keywords:
 				# create a keyword ex: PRINT 
 				# otherwise if value isn't a reserved keyword a variable identifer will be created
 				kind = value
 			elif kind == 'NEWLINE':
 				line_start = match_obj.end()
 				self.line_no += 1
-				break
 			elif kind == 'SKIP':
 				continue
 			elif kind == 'MISMATCH':
@@ -105,20 +113,27 @@ class Lexer():
 				raise RuntimeError(f'fail to match on {self.line_no}')
 
 			token_type = TokenType(kind)
-			print('\t',token_type)
+			node = Node(token_type, value, self.line_no, column)
+			Lexer.pretty_print_token(node)
 
-			self._tokens.append(Node(token_type, value, self.line_no, column))
+			self._tokens.append(node)
 
 
-	def peek_n(self, tokenTypes: list[str]) -> bool:
-		for i, tok in enumerate(tokenTypes):
-			if not self._tokens[i].kind == tok:
+	def peek_n(self, token_types: list[TokenType]) -> bool:
+		if len(token_types) > len(self._tokens):
+			return False
+		
+		for i, expected_type in enumerate(token_types):
+			if self._tokens[i].type is not expected_type:
 				return False
+
 		return True
 
-	def peek(self, tokenType: str) -> bool:
-		return len(self._tokens) > 0 and self._tokens[0].kind == tokenType
+	def peek(self, token_type: TokenType) -> bool:
+		return len(token_type) > 0 and self._tokens[0].type is token_type
 			
 	def pop(self, number_tokens_to_pop: int):
-		for i in range(number_tokens_to_pop):
-			self._tokens.pop()
+		if len(self._tokens) < number_tokens_to_pop:
+			raise RuntimeError(f"Cannot remove {number_tokens_to_pop} when there are only {len(self._tokens)} remaning")
+
+		[self._tokens.popleft() for x in range(number_tokens_to_pop)]

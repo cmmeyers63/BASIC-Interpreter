@@ -1,4 +1,4 @@
-from ast_types import *
+from b_types import *
 from collections import deque
 from lex import *
 
@@ -12,20 +12,8 @@ class Parser():
 		self._root_node = None
 		self._lexer = lexer
 
-	def _pop_tokens(self, token_list : list) -> None:
-		for tok in token_list:
-			self.tokens.remove(tok)
 
 
-	def _peek(self, token_type_list : list[TokenType]) -> bool:
-		if len(self.tokens) < len(token_type_list):
-			return False 
-
-		for i, token_t in enumerate(token_type_list):
-			if self.tokens[i].type != token_t:
-				return False
-
-		return True
 
 	# https://www.graphviz.org/pdf/dotguide.pdf
 	def Create_GraphViz(self):
