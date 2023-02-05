@@ -110,6 +110,7 @@ class Lexer():
 			elif kind == 'MISMATCH':
 				raise RuntimeError(f'\n{value!r} unexpected on line {self.line_no}\nline: {line}')
 			elif kind == None:
+				# I don't think this will ever be raised due to the Mismatch rule
 				raise RuntimeError(f'fail to match on {self.line_no}')
 
 			token_type = TokenType(kind)

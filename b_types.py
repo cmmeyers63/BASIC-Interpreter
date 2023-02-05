@@ -28,6 +28,9 @@ class TokenType(StrEnum):
 	COMMA		= 'COMMA'
 	QUOTE		= 'QUOTE'
 
+	# non terminals 
+	
+
 
 
 class Node():

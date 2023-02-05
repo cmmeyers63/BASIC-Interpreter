@@ -22,13 +22,6 @@ if __name__ == "__main__":
 
 	lexer.Tokenize()
 
-	# print(lexer.peek(TokenType.NUMBER))
-	# print(lexer.peek(TokenType.ASSIGN))
-
-	# print(lexer.peek_n([TokenType.NUMBER, TokenType.OP, TokenType.NUMBER]))
-
-	# print(lexer.pop(1))
-	# print(lexer.peek(TokenType.OP))
 
 	exit()
 

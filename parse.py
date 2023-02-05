@@ -13,8 +13,6 @@ class Parser():
 		self._lexer = lexer
 
 
-
-
 	# https://www.graphviz.org/pdf/dotguide.pdf
 	def Create_GraphViz(self):
 		# visualize with : dot -Tpdf parse.dot > parse.pdf
@@ -45,28 +43,30 @@ class Parser():
 			f.write("} \n")
 				
 	def Parse(self):
-		self.START()
+		self._root_node = self.START()
 
 	# S -> A_EXPR ;
-	def START(self) -> Token:
-		current_node = Token(TokenType.START)
-		self._root_node = current_node
-		self.A_EXPR(current_node)
+	def START(self) -> Node:
+		current_node = Node(TokenType.START)
+		current_node.add_children(self.A_EXPR(current_node))
+
+		return current_node
 		
 	# generally:
 	# consume terminals, call function for Non-terminal
 
-	def A_EXPR(self, parent_node : Token):
+	def A_EXPR(self, parent_node : Node) -> Node:
 		# non terminals make their own nodes
-		current_node = Token(TokenType.A_EXPR)
-		parent_node.add_children([current_node])
+		current_node = Node(TokenType.A_EXPR)
+		current_node.attach_parent(parent_node)
 
-		self.B_EXPR(current_node)
+		
+		b_expr = self.B_EXPR(current_node)
 
 		# + ...
 		# - ... 
-		if self._peek([TokenType.PLUS]) or self._peek([TokenType.MINUS]):
-			current_node.add_children([self.tokens.pop(0)]) # capture terminal
+		if self._lexer.peek(TokenType.OP):
+			current_node.add_children([self._lexer.pop()]) # capture terminal
 			self.A_EXPR(current_node)
 
 
