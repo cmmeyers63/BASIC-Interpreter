@@ -25,7 +25,7 @@ class Parser():
 			self._root_node.id = nodeId
 			Q.append(self._root_node)
 			while len(Q) > 0:
-				current_node : Token = Q.pop()
+				current_node : Node = Q.pop()
 				nodeId = nodeId + 1
 				current_node.id = nodeId
 				f.write(f'{nodeId} [label="{current_node}"];\n')
@@ -35,7 +35,7 @@ class Parser():
 			Q = deque()
 			Q.append(self._root_node)
 			while len(Q) > 0:
-				current_node : Token = Q.pop()
+				current_node : Node = Q.pop()
 				for child in current_node.children:
 					f.write(f"{current_node.id} -> {child.id};\n")
 				Q.extend(current_node.children)
@@ -44,11 +44,12 @@ class Parser():
 				
 	def Parse(self):
 		self._root_node = self.START()
+		print(self._root_node)
 
 	# S -> A_EXPR ;
 	def START(self) -> Node:
-		current_node = Node(TokenType.START)
-		current_node.add_children(self.A_EXPR(current_node))
+		current_node = Node(TokenType('START'))
+		current_node.add_children([self.A_EXPR(current_node)])
 
 		return current_node
 		
@@ -57,52 +58,69 @@ class Parser():
 
 	def A_EXPR(self, parent_node : Node) -> Node:
 		# non terminals make their own nodes
-		current_node = Node(TokenType.A_EXPR)
+		current_node = Node(TokenType('A_EXPR'))
 		current_node.attach_parent(parent_node)
 
 		
 		b_expr = self.B_EXPR(current_node)
+		current_node.add_children([b_expr])
 
 		# + ...
 		# - ... 
-		if self._lexer.peek(TokenType.OP):
+		if self._lexer.peek_n([TokenType('AOP')]):
 			current_node.add_children([self._lexer.pop()]) # capture terminal
-			self.A_EXPR(current_node)
+			a_expr = self.A_EXPR(current_node)
+			current_node.add_children([a_expr])
+
+		return current_node
 
 
-	def B_EXPR(self, parent_node : Token):
-		current_node = Token(TokenType.B_EXPR)
-		parent_node.add_children([current_node])
+	def B_EXPR(self, parent_node : Node) -> Node:
+		# non terminals make their own nodes
+		current_node = Node(TokenType('A_EXPR'))
+		current_node.attach_parent(parent_node)
+
 		
-		self.I_EXPR(current_node)
+		i_expr = self.I_EXPR(current_node)
+		current_node.add_children([i_expr])
 
-		if self._peek([TokenType.TIMES] or self._peek([TokenType.DIVIDE])):
-			current_node.add_children([self.tokens.pop(0)])
-			self.B_EXPR(current_node)
+		# / ...
+		# * ... 
+		if self._lexer.peek_n([TokenType('BOP')]):
+			current_node.add_children([self._lexer.pop()]) # capture terminal
+			a_expr = self.A_EXPR(current_node)
+			current_node.add_children([a_expr])
+
+		return current_node
 
 
-	def I_EXPR(self, parent_node : Token):
-		current_node = Token(TokenType.I_EXPR)
-		parent_node.add_children([current_node])
+	def I_EXPR(self, parent_node : Node) -> Node:
+		current_node = Node(TokenType('I_EXPR'))
+		current_node.attach_parent(parent_node)
 
 		# 5 ** 2
-		if self._peek([TokenType.VALUE, TokenType.POW, TokenType.VALUE]):
-			current_node.add_children([self.tokens.pop(0), self.tokens.pop(0), self.tokens.pop(0)])
-		# -(5)
-		elif self._peek([TokenType.MINUS, TokenType.L_PAREN]):
-			# -(
-			current_node.add_children([self.tokens.pop(0), self.tokens.pop(0)])
-			self.A_EXPR(current_node) 
-			# )
-			current_node.add_children([self.tokens.pop(0)])
-		elif self._peek([TokenType.L_PAREN]):
-			# (
-			current_node.add_children([self.tokens.pop(0)])
-			self.A_EXPR(current_node)
-			# ) 
-			current_node.add_children([self.tokens.pop(0)])
-		# 5
-		elif self._peek([TokenType.VALUE]):
-			current_node.add_children([self.tokens.pop(0)])
+		# if self._lexer.peek_n([TokenType.NUMBER, TokenType.POW, TokenType.NUMBER]):
+		# 	raise NotImplemented("5 ** 2")
+		# 	current_node.add_children([self.tokens.pop(0), self.tokens.pop(0), self.tokens.pop(0)])
+		# # -(5)
+		# # BUG AOP 
+		# elif self._lexer.peek_n([TokenType.AOP, TokenType.L_PAREN]):
+		# 	# -(
+		# 	current_node.add_children([self.tokens.pop(0), self.tokens.pop(0)])
+		# 	self.A_EXPR(current_node) 
+		# 	# )
+		# 	current_node.add_children([self.tokens.pop(0)])
+		# elif self._lexer.peek_n([TokenType.L_PAREN]):
+		# 	# (
+		# 	current_node.add_children([self.tokens.pop(0)])
+		# 	self.A_EXPR(current_node)
+		# 	# ) 
+		# 	current_node.add_children([self.tokens.pop(0)])
+		# # 5
+		if self._lexer.peek_n([TokenType.NUMBER]):
+			node = self._lexer.pop()
+			current_node.add_children([node])
 		else:
-			raise ParseError(f"Unexpected tokens in I_EXPR {self.tokens}")
+			raise ParseError(f"Unexpected tokens in I_EXPR")
+
+		return current_node

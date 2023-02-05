@@ -32,7 +32,8 @@ class Lexer():
 		('NUMBER',   r'\d+(\.\d*)?'),  # Integer or decimal number
 		('ASSIGN',   r'='),            # Assignment operator
 		('IDENT',    r'[A-Za-z]+'),    # Identifiers
-		('OP',       r'[+\-*/]'),      # Arithmetic operators
+		('BOP',      r'[*/]'),         # Bianary operators
+		('AOP',		 r'[+-]'),		   # Arithmetic operators
 		('COMPARE',  r'>=|<=|>|<|<>'), # comparison operators
 		('L_PAREN',  r'\('),
 		('R_PAREN',  r'\)'),
@@ -84,7 +85,7 @@ class Lexer():
 			self._tokenize_line(line)
 			
 		# manually append a EOF
-		node = Node(TokenType.EOF,'',self.line_no,0)
+		node = Node(TokenType('EOF'),'',self.line_no + 1,0)
 		Lexer.pretty_print_token(node)
 		self._tokens.append(node)
 
@@ -133,8 +134,8 @@ class Lexer():
 	def peek(self, token_type: TokenType) -> bool:
 		return len(token_type) > 0 and self._tokens[0].type is token_type
 			
-	def pop(self, number_tokens_to_pop: int):
-		if len(self._tokens) < number_tokens_to_pop:
-			raise RuntimeError(f"Cannot remove {number_tokens_to_pop} when there are only {len(self._tokens)} remaning")
+	def pop(self):
+		if len(self._tokens) == 0:
+			raise RuntimeError(f"Cannot remove token. None remaining")
 
-		[self._tokens.popleft() for x in range(number_tokens_to_pop)]
+		return(self._tokens.popleft())

@@ -20,7 +20,8 @@ class TokenType(StrEnum):
 	NUMBER 		= 'NUMBER'
 	ASSIGN		= 'ASSIGN'
 	IDENT		= 'IDENT'
-	OP			= 'OP'
+	BOP			= 'BOP'
+	AOP			= 'AOP'
 	COMPARE 	= 'COMPARE'
 	L_PAREN		= 'L_PAREN'
 	R_PAREN		= 'R_PAREN'
@@ -29,7 +30,11 @@ class TokenType(StrEnum):
 	QUOTE		= 'QUOTE'
 
 	# non terminals 
-	
+	START 		= 'START'
+	A_EXPR		= 'A_EXPR'
+	B_EXPR		= 'B_EXPR'
+	I_EXPR		= 'I_EXPR'
+
 
 
 
@@ -49,5 +54,8 @@ class Node():
 		type_without_prefix = str(self.type).split('.')[-1]
 		return f"{type_without_prefix} {self.value if self.value is not None else '-'}"
 
-	def add_children(self, tokens: list):
-		self.children.extend(tokens)
+	def add_children(self, nodes: list):
+		self.children.extend(nodes)
+
+	def attach_parent(self, node):
+		self.parent = node
