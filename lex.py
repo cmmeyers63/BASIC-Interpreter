@@ -74,7 +74,7 @@ class Lexer():
 		line_comment_re = re.compile(r'^\d+ REM')
 
 		for line in file_lines:
-			print("line:",line, end='')
+			print("line:",line)
 			# skip over comments
 			mo = line_comment_re.match(line)
 			if mo is not None:

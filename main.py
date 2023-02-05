@@ -9,9 +9,9 @@ from b_types import *
 
 if __name__ == "__main__":
 
-	# if len(sys.argv) < 2:
-	# 	print("usage: python calc.py [args]")
-	# 	exit(1)
+	if len(sys.argv) < 2:
+		print("usage: python calc.py [args]")
+		exit(1)
 
 	filename = "expr.BAS"
 	if not os.path.isfile(filename):

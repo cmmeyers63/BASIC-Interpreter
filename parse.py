@@ -77,7 +77,7 @@ class Parser():
 
 	def B_EXPR(self, parent_node : Node) -> Node:
 		# non terminals make their own nodes
-		current_node = Node(TokenType('A_EXPR'))
+		current_node = Node(TokenType('B_EXPR'))
 		current_node.attach_parent(parent_node)
 
 		
@@ -116,10 +116,20 @@ class Parser():
 		# 	self.A_EXPR(current_node)
 		# 	# ) 
 		# 	current_node.add_children([self.tokens.pop(0)])
-		# # 5
+		# number
 		if self._lexer.peek_n([TokenType.NUMBER]):
-			node = self._lexer.pop()
-			current_node.add_children([node])
+			current_node.add_children([self._lexer.pop()])
+		# ( A_EXPR )
+		elif self._lexer.peek_n([TokenType.L_PAREN]):
+			# consume both L_PAREN and A_EXPR
+			current_node.add_children([self._lexer.pop(), self.A_EXPR(current_node)])
+			if (self._lexer.peek_n([TokenType.R_PAREN])):
+				current_node.add_children([self._lexer.pop()])
+			else:
+				raise RuntimeError("No match to L_PAREN")
+
+		# elif self._lexer.peek_n([TokenType.L_PAREN]):
+		# 	current_node.add_children([self._lexer.pop()])
 		else:
 			raise ParseError(f"Unexpected tokens in I_EXPR")
 
