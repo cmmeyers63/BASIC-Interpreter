@@ -91,6 +91,9 @@ class Parser():
 			a_expr = self.A_EXPR(current_node)
 			current_node.add_children([a_expr])
 
+			if current_node.value == '/':
+				print("division encountered")
+
 		return current_node
 
 
