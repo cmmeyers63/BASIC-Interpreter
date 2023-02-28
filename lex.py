@@ -103,9 +103,6 @@ class Lexer():
 				# create a keyword ex: PRINT 
 				# otherwise if value isn't a reserved keyword a variable identifer will be created
 				kind = value
-			elif kind == 'AOP' or kind == 'BOP':
-				# BUG BUG need to be able to distinguish the different types of artithmetic operators.
-				pass	
 			elif kind == 'NEWLINE':
 				line_start = match_obj.end()
 				self.line_no += 1

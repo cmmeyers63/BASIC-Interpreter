@@ -68,9 +68,16 @@ class Parser():
 		# + ...
 		# - ... 
 		if self._lexer.peek_n([TokenType('AOP')]):
-			current_node.add_children([self._lexer.pop()]) # capture terminal
+			token = self._lexer.pop()
+			current_node.add_children([token]) # capture terminal
 			a_expr = self.A_EXPR(current_node)
 			current_node.add_children([a_expr])
+
+			if token.value == '-':
+				# flip order for correct operator precedence
+				current_node.children.clear()
+				current_node.add_children([a_expr, token, b_expr])
+
 
 		return current_node
 
@@ -87,12 +94,17 @@ class Parser():
 		# / ...
 		# * ... 
 		if self._lexer.peek_n([TokenType('BOP')]):
-			current_node.add_children([self._lexer.pop()]) # capture terminal
+			token = self._lexer.pop()
+
+			
+			current_node.add_children([token]) # capture terminal
 			a_expr = self.A_EXPR(current_node)
 			current_node.add_children([a_expr])
 
-			if current_node.value == '/':
-				print("division encountered")
+			if token.value == '/':
+				# flip order for correct operator precedence
+				current_node.children.clear()
+				current_node.add_children([a_expr, token, i_expr])
 
 		return current_node
 
@@ -101,24 +113,6 @@ class Parser():
 		current_node = Node(TokenType('I_EXPR'))
 		current_node.attach_parent(parent_node)
 
-		# 5 ** 2
-		# if self._lexer.peek_n([TokenType.NUMBER, TokenType.POW, TokenType.NUMBER]):
-		# 	raise NotImplemented("5 ** 2")
-		# 	current_node.add_children([self.tokens.pop(0), self.tokens.pop(0), self.tokens.pop(0)])
-		# # -(5)
-		# # BUG AOP 
-		# elif self._lexer.peek_n([TokenType.AOP, TokenType.L_PAREN]):
-		# 	# -(
-		# 	current_node.add_children([self.tokens.pop(0), self.tokens.pop(0)])
-		# 	self.A_EXPR(current_node) 
-		# 	# )
-		# 	current_node.add_children([self.tokens.pop(0)])
-		# elif self._lexer.peek_n([TokenType.L_PAREN]):
-		# 	# (
-		# 	current_node.add_children([self.tokens.pop(0)])
-		# 	self.A_EXPR(current_node)
-		# 	# ) 
-		# 	current_node.add_children([self.tokens.pop(0)])
 		# number
 		if self._lexer.peek_n([TokenType.NUMBER]):
 			current_node.add_children([self._lexer.pop()])
