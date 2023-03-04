@@ -9,7 +9,7 @@ class ParseError(Exception):
 
 class Parser():
 	def __init__(self, lexer : Lexer) -> None:
-		self._root_node = None
+		self.root_node = None
 		self._lexer = lexer
 
 
@@ -22,8 +22,8 @@ class Parser():
 			nodeId = 0
 			# traverse tree and list all nodes
 			Q = deque()
-			self._root_node.id = nodeId
-			Q.append(self._root_node)
+			self.root_node.id = nodeId
+			Q.append(self.root_node)
 			while len(Q) > 0:
 				current_node : Node = Q.pop()
 				nodeId = nodeId + 1
@@ -33,7 +33,7 @@ class Parser():
 			
 			# traverse tree and list all edges
 			Q = deque()
-			Q.append(self._root_node)
+			Q.append(self.root_node)
 			while len(Q) > 0:
 				current_node : Node = Q.pop()
 				for child in current_node.children:
@@ -43,8 +43,8 @@ class Parser():
 			f.write("} \n")
 				
 	def Parse(self):
-		self._root_node = self.START()
-		print(self._root_node)
+		self.root_node = self.START()
+		print(self.root_node)
 
 	# S -> A_EXPR ;
 	def START(self) -> Node:

@@ -31,3 +31,8 @@ if __name__ == "__main__":
 	print("begin graphviz")
 	parser.Create_GraphViz() # creates file
 	print("end graphviz")
+
+	ast_root = parser.root_node
+	print("begin interpret")
+	
+	print("end interpret")

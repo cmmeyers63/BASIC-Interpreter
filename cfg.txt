@@ -16,29 +16,6 @@ I_EXPR -> value ** value
         | value
         | -(A_EXPR) | (A_EXPR)
 
-division and subtraction will need to be unrolled during SDT to produce the correct operator associativity
 
-
-        def lex(input : list[str]) -> list[Token]:
-                user_in = [x for x in user_in if x != "" or x != " "]
-
-                print(f"start build token")
-                tokens = []
-                for char in user_in:
-                        print(f"\t in : {char}")
-                        token = build_token(char)
-                        print(f"\t out: {token}")
-                        tokens.append(token)
-                print("end build token")
-                return tokens
-
-
-        def peek(self, token_type_list : list[TokenType]) -> bool:
-                for tok in token_type_list:
-                        result : bool = self._peek(tok)
-                        if not result:
-                                return result
-                return True
-
-        def peek(self, token_type : TokenType) -> bool:
-                pass
+Currently, I don't do any parse tree simplification except for flipping subtraction and division to have 
+the correct left associativity.
