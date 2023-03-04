@@ -25,7 +25,7 @@ class Parser():
 			self.root_node.id = nodeId
 			Q.append(self.root_node)
 			while len(Q) > 0:
-				current_node : Node = Q.pop()
+				current_node : Node = Q.popleft()
 				nodeId = nodeId + 1
 				current_node.id = nodeId
 				f.write(f'{nodeId} [label="{current_node}"];\n')
@@ -35,7 +35,7 @@ class Parser():
 			Q = deque()
 			Q.append(self.root_node)
 			while len(Q) > 0:
-				current_node : Node = Q.pop()
+				current_node : Node = Q.popleft()
 				for child in current_node.children:
 					f.write(f"{current_node.id} -> {child.id};\n")
 				Q.extend(current_node.children)
@@ -73,10 +73,10 @@ class Parser():
 			a_expr = self.A_EXPR(current_node)
 			current_node.add_children([a_expr])
 
-			if token.value == '-':
-				# flip order for correct operator precedence
-				current_node.children.clear()
-				current_node.add_children([a_expr, token, b_expr])
+			# if token.value == '-':
+			# 	# flip order for correct operator precedence
+			# 	current_node.children.clear()
+			# 	current_node.add_children([a_expr, token, b_expr])
 
 
 		return current_node
@@ -101,10 +101,10 @@ class Parser():
 			a_expr = self.A_EXPR(current_node)
 			current_node.add_children([a_expr])
 
-			if token.value == '/':
-				# flip order for correct operator precedence
-				current_node.children.clear()
-				current_node.add_children([a_expr, token, i_expr])
+			# if token.value == '/':
+			# 	# flip order for correct operator precedence
+			# 	current_node.children.clear()
+			# 	current_node.add_children([a_expr, token, i_expr])
 
 		return current_node
 
@@ -116,6 +116,9 @@ class Parser():
 		# number
 		if self._lexer.peek_n([TokenType.NUMBER]):
 			current_node.add_children([self._lexer.pop()])
+		# variable
+		elif self._lexer.peek(TokenType.IDENT):
+			current_node.add_children([self._lexer.pop()])
 		# ( A_EXPR )
 		elif self._lexer.peek_n([TokenType.L_PAREN]):
 			# consume both L_PAREN and A_EXPR
@@ -124,9 +127,6 @@ class Parser():
 				current_node.add_children([self._lexer.pop()])
 			else:
 				raise RuntimeError("No match to L_PAREN")
-
-		# elif self._lexer.peek_n([TokenType.L_PAREN]):
-		# 	current_node.add_children([self._lexer.pop()])
 		else:
 			raise ParseError(f"Unexpected tokens in I_EXPR")
 

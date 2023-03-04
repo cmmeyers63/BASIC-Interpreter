@@ -14,6 +14,7 @@ B_EXPR -> I_EXPR (* | /) B_EXPR
 
 I_EXPR -> value ** value
         | value
+        | identifier
         | -(A_EXPR) | (A_EXPR)
 
 

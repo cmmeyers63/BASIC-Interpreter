@@ -46,7 +46,7 @@ class Node():
 		self.line = line
 		self.col = col
 		
-		self.children = []
+		self.children: list[Node] = []
 		self.parent = None
 		self.id = 0
 
