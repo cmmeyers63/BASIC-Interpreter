@@ -31,6 +31,8 @@ class TokenType(StrEnum):
 
 	# non terminals 
 	START 		= 'START'
+	STMT_LIST	= 'STMT_LIST'
+	STMT		= 'STMT'
 	A_EXPR		= 'A_EXPR'
 	B_EXPR		= 'B_EXPR'
 	I_EXPR		= 'I_EXPR'
@@ -54,8 +56,13 @@ class Node():
 		type_without_prefix = str(self.type).split('.')[-1]
 		return f"{type_without_prefix} {self.value if self.value is not None else '-'}"
 
-	def add_children(self, nodes: list):
-		self.children.extend(nodes)
+	# takes either a list or a single node
+	def add_children(self, nodes):
+		if type(nodes) is list:
+			self.children.extend(nodes)
+		else:
+			self.children.append(nodes)
+		
 
 	def attach_parent(self, node):
 		self.parent = node

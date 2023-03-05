@@ -8,7 +8,12 @@ class Interpreter():
         self.program_counter = 0
         self.symbol_table: dict[str, object] = {}
 
+    def eval_statement(self, node: Node):
+        
+        
 
+    # an expression always returns a value
+    # that value may be a string, double, or integer
     def eval_expr(self, node : Node) -> object:
         children = node.children
         
@@ -37,8 +42,10 @@ class Interpreter():
                     case _:
                             raise RuntimeError(f"Fell through on {children[1].value}")
             # node with a singular child, just need get the value of the child
-            else:
+            elif len(children) == 1:
                 return self.eval_expr(children[0])
+            else:
+                raise RuntimeError("eval A_EXPR or B_EXPR fell through")
         # I_EXPRs may hold values, simple expressions that can be evluated without recursion
         # or a nested A_EXPR
         elif node.type is TokenType.I_EXPR:     
@@ -59,7 +66,6 @@ class Interpreter():
                             raise RuntimeError(f"token={children[0].value} is undefined at row={children[0].line} col={children[0].col}")
                     case _:
                         return (children[0].value)
-            elif len(children) == 4 and \
-                children[1].type is TokenType.L_PAREN and children[3].type is TokenType.R_PAREN:
-                 return -1 * self.eval_expr(children[2])
+            else: 
+                raise RuntimeError("eval I_EXPR fell through")
             

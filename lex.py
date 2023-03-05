@@ -120,20 +120,19 @@ class Lexer():
 
 			self._tokens.append(node)
 
-
-	def peek_n(self, token_types: list[TokenType]) -> bool:
-		if len(token_types) > len(self._tokens):
-			return False
-		
-		for i, expected_type in enumerate(token_types):
-			if self._tokens[i].type is not expected_type:
+	def peek(self, token_type) -> bool:
+		if type(token_type) is list:
+			if len(token_type) > len(self._tokens):
 				return False
+			for i, expected_type in enumerate(token_type):
+				if self._tokens[i].type is not expected_type:
+					return False
+			return True
+		elif type(token_type) is TokenType:
+			return len(token_type) > 0 and self._tokens[0].type is token_type
+		else:
+			raise TypeError(f"peek recived {type(token_type)}??")
 
-		return True
-
-	def peek(self, token_type: TokenType) -> bool:
-		return len(token_type) > 0 and self._tokens[0].type is token_type
-			
 	def pop(self):
 		if len(self._tokens) == 0:
 			raise RuntimeError(f"Cannot remove token. None remaining")

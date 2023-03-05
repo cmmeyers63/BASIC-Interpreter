@@ -49,9 +49,72 @@ class Parser():
 	# S -> A_EXPR ;
 	def START(self) -> Node:
 		current_node = Node(TokenType('START'))
-		current_node.add_children([self.A_EXPR(current_node)])
+		current_node.add_children(self.STMT_LIST(current_node))
 
 		return current_node
+	
+	def STMT_LIST(self, parent_node : Node) -> Node:
+		current_node = Node(TokenType('STMT_LIST'))
+		current_node.attach_parent(parent_node)
+
+		# Process statements untill EOF encountered
+		while not self._lexer.peek(TokenType.EOF):
+			if not self._lexer.peek(TokenType.NUMBER):
+				raise ParseError("ERROR: line_number expected")
+			
+			# ex: 100 goto 5
+			current_node.add_children([self._lexer.pop(), self.STMT(current_node)])
+
+			if not self._lexer.peek(TokenType.NEWLINE):
+				raise ParseError("ERROR: newline expected at end of statement")
+			self._lexer.pop()
+
+		# adding EOF
+		current_node.add_children(self._lexer.pop())
+		return current_node
+
+
+	def STMT(self, parent_node : Node) -> Node:
+		current_node = Node(TokenType('STMT'))
+		current_node.attach_parent(parent_node)
+
+		if self._lexer.peek(TokenType.GOTO):
+			goto = self._lexer.pop()
+			a_expr = self.A_EXPR(current_node)
+			current_node.add_children([goto, a_expr])
+		# identifer = A_EXPR
+		elif self._lexer.peek([TokenType.IDENT, TokenType.ASSIGN]):
+			identifier = self._lexer.pop()
+			assign = self._lexer.pop()
+			a_expr = self.A_EXPR(current_node)
+			current_node.add_children([identifier, assign, a_expr])
+		# if L_EXPR then goto value
+		elif self._lexer.peek(TokenType.IF):
+			_if = self._lexer.pop()
+			l_expr = self.L_EXPR(current_node)
+			if not self._lexer.peek([TokenType.THEN, TokenType.GOTO, TokenType.NUMBER]):
+				raise ParseError(f"expected then goto after if L_EXPR line={_if.line}")
+			then = self._lexer.pop()
+			goto = self._lexer.pop()
+			line_number = self._lexer.pop()
+			current_node.add_children([_if, l_expr, then, goto, line_number])
+		# PRINT(A_EXPR)
+		elif self._lexer.peek([TokenType.PRINT, TokenType.L_PAREN]):
+			_print = self._lexer.pop()
+			l_paren = self._lexer.pop()
+			a_expr = self.A_EXPR(current_node)
+			if not self._lexer.peek([TokenType.R_PAREN]):
+				raise ParseError(f"expected then r_paren to close PRINT line={l_paren.line}")
+			r_paren = self._lexer.pop()
+			current_node.add_children([_print, l_paren, a_expr, r_paren])
+		else:
+			raise ParseError(f"Unexpected thing in STMT")
+		
+		return current_node
+
+
+	def L_EXPR(self, parent_node : Node) -> Node:
+		return self.A_EXPR(parent_node)
 		
 	# generally:
 	# consume terminals, call function for Non-terminal
@@ -63,15 +126,15 @@ class Parser():
 
 		
 		b_expr = self.B_EXPR(current_node)
-		current_node.add_children([b_expr])
+		current_node.add_children(b_expr)
 
 		# + ...
 		# - ... 
-		if self._lexer.peek_n([TokenType('AOP')]):
+		if self._lexer.peek([TokenType('AOP')]):
 			token = self._lexer.pop()
-			current_node.add_children([token]) # capture terminal
+			current_node.add_children(token) # capture terminal
 			a_expr = self.A_EXPR(current_node)
-			current_node.add_children([a_expr])
+			current_node.add_children(a_expr)
 
 			# if token.value == '-':
 			# 	# flip order for correct operator precedence
@@ -93,13 +156,13 @@ class Parser():
 
 		# / ...
 		# * ... 
-		if self._lexer.peek_n([TokenType('BOP')]):
+		if self._lexer.peek([TokenType('BOP')]):
 			token = self._lexer.pop()
 
 			
-			current_node.add_children([token]) # capture terminal
+			current_node.add_children(token) # capture terminal
 			a_expr = self.A_EXPR(current_node)
-			current_node.add_children([a_expr])
+			current_node.add_children(a_expr)
 
 			# if token.value == '/':
 			# 	# flip order for correct operator precedence
@@ -113,20 +176,17 @@ class Parser():
 		current_node = Node(TokenType('I_EXPR'))
 		current_node.attach_parent(parent_node)
 
-		# number
-		if self._lexer.peek_n([TokenType.NUMBER]):
-			current_node.add_children([self._lexer.pop()])
-		# variable
-		elif self._lexer.peek(TokenType.IDENT):
-			current_node.add_children([self._lexer.pop()])
+		# number or variable
+		if self._lexer.peek(TokenType.IDENT) or self._lexer.peek(TokenType.NUMBER):
+			current_node.add_children(self._lexer.pop())
 		# ( A_EXPR )
-		elif self._lexer.peek_n([TokenType.L_PAREN]):
+		elif self._lexer.peek([TokenType.L_PAREN]):
 			# consume both L_PAREN and A_EXPR
 			current_node.add_children([self._lexer.pop(), self.A_EXPR(current_node)])
-			if (self._lexer.peek_n([TokenType.R_PAREN])):
-				current_node.add_children([self._lexer.pop()])
+			if (self._lexer.peek([TokenType.R_PAREN])):
+				current_node.add_children(self._lexer.pop())
 			else:
-				raise RuntimeError("No match to L_PAREN")
+				raise ParseError("No match to L_PAREN")
 		else:
 			raise ParseError(f"Unexpected tokens in I_EXPR")
 

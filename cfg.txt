@@ -4,7 +4,20 @@ Grammer:
 https://www.usna.edu/Users/cs/wcbrown/courses/F20SI413/lec/l10/lec.html
 https://www.usna.edu/Users/cs/wcbrown/courses/F20SI413/firstFollowPredict/ffp.html
 
-START -> A_EXPR $
+START -> STMT_LIST $
+
+// STMT_LIST processes more tokens without recursion
+STMT_LIST -> 
+        | value STMT newline (STMT_LIST)*
+        | EOF
+
+STMT -> goto A_EXPR
+        | identifer = A_EXPR
+        | if L_EXPR then goto value
+        | PRINT(A_EXPR)
+
+// Logic expression
+L_EXPR -> not implemented
 
 A_EXPR -> B_EXPR (+ | -) A_EXPR
         | B_EXPR
@@ -17,6 +30,3 @@ I_EXPR -> value ** value
         | identifier
         | -(A_EXPR) | (A_EXPR)
 
-
-Currently, I don't do any parse tree simplification except for flipping subtraction and division to have 
-the correct left associativity.
