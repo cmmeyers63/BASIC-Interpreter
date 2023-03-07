@@ -1,5 +1,6 @@
 import sys
 import os.path
+from collections import OrderedDict
 import lex
 import parse
 import interpreter
@@ -18,21 +19,24 @@ if __name__ == "__main__":
 		exit(1)
 
 	# initalize the lexer with the passed filename
-	lexer = lex.Lexer(filename)
-
-	lexer.Tokenize()
-
-	parser = parse.Parser(lexer)
-
-	print("begin parse")
-	parser.Parse()
-	print("end parse")
-	print("begin graphviz")
-	parser.Create_GraphViz() # creates file
-	print("end graphviz")
-
-	ast_root : Node = parser.root_node  # type: ignore
-	print("begin interpret")
-	comp = interpreter.Interpreter(ast_root.children[0])
-	print(comp.eval_expr(ast_root.children[0]))
-	print("end interpret")
+	try:
+		lexer = lex.Lexer(filename)
+		lexer.Tokenize()
+	except Exception as ex:
+		print(f"[ERROR] lex failed")
+		raise ex
+	try:
+		parser = parse.Parser(lexer)
+		parse_tree = parser.Parse()
+		# creates a .dot file based on the original parse_tree. This may be slightly different than
+		# the stmt_dict which is returned
+		parser.Create_GraphViz() 
+	except Exception as ex:
+		print(f"[ERROR] parse failed")
+		raise ex
+	try:
+		comp = interpreter.Interpreter(parse_tree)
+		comp.eval_program()
+	except Exception as ex:
+		print(f"[ERROR] interpret failed")
+		raise ex

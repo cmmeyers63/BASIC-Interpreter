@@ -1,5 +1,6 @@
 from b_types import *
 from collections import deque
+from collections import OrderedDict
 from lex import *
 
 class ParseError(Exception):
@@ -9,7 +10,7 @@ class ParseError(Exception):
 
 class Parser():
 	def __init__(self, lexer : Lexer) -> None:
-		self.root_node = None
+		self._root_node = None
 		self._lexer = lexer
 
 
@@ -22,8 +23,8 @@ class Parser():
 			nodeId = 0
 			# traverse tree and list all nodes
 			Q = deque()
-			self.root_node.id = nodeId
-			Q.append(self.root_node)
+			self._root_node.id = nodeId
+			Q.append(self._root_node)
 			while len(Q) > 0:
 				current_node : Node = Q.popleft()
 				nodeId = nodeId + 1
@@ -33,7 +34,7 @@ class Parser():
 			
 			# traverse tree and list all edges
 			Q = deque()
-			Q.append(self.root_node)
+			Q.append(self._root_node)
 			while len(Q) > 0:
 				current_node : Node = Q.popleft()
 				for child in current_node.children:
@@ -42,9 +43,15 @@ class Parser():
 
 			f.write("} \n")
 				
-	def Parse(self):
-		self.root_node = self.START()
-		print(self.root_node)
+	def Parse(self) -> Node:
+		# build the parse tree
+		self._root_node = self.START()
+
+		# a program in BASIC is really just a list of statments.
+		# the parser will just remove the START node and return the resultant ast
+		return self._root_node.children[0]
+
+
 
 	# S -> A_EXPR ;
 	def START(self) -> Node:

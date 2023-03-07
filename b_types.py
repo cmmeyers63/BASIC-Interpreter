@@ -42,6 +42,9 @@ class TokenType(StrEnum):
 
 class Node():
 	# terminal symbol constructor
+	# __match_args__ allows for structural pattern matching to be conducted  
+	# w/ the first enum parameter TokenType specified
+	__match_args__ = ("type")
 	def __init__(self, type : TokenType, value: str = "", line: int = -1, col: int = -1) -> None:
 		self.type = type
 		self.value = value
